@@ -19,7 +19,12 @@ class MainActivity : AppCompatActivity() {
     //3 Levels: Global Scope - starts and ends with the app
     //Lifecycle Scope - stops when activity destroy, but should check activity status and cancel.
     //ViewModel Scope - same like lifecycle scope, but will live as viewmodel alive.
-    //
+    //3 Dispatcher pool types- Use to specify which thread should be performed.
+    //.Main - UI non blocking operations. UI related events android main/ui thread
+    //.IO - network and disk operations. netorking or read/write files or any input/output
+    //.DEFAULT - if not specified, this will use. sort large list, complex calculations
+    //Couroutines start using .LAUNCH builder. Starts the corouting and return it as a job
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
