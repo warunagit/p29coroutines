@@ -1,5 +1,6 @@
 package com.cycolabs.p29coroutines
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -7,7 +8,9 @@ import androidx.databinding.DataBindingUtil
 import com.cycolabs.p29coroutines.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
     //android use main thread to execute all executions like
@@ -30,6 +33,13 @@ class MainActivity : AppCompatActivity() {
     //**only the original thread that created view, can touch its view.
     //inside coroutines, to switch between Dispatchers, should use withContext() method
     //CoroutineScope(Dispatchers.Main).launch -> withContext(Dispatchers.Main)
+    //withContext is a suspend function, cancellable.
+    //SuspendFunctions can paused, resumed, execute long running operations and..
+    //wait for them to complete without blocking
+    //2 routine patterns: serial, parrallel
+    //serials just execute one after one
+    //parallel methods should mark with "async", and results with the "await" key-word
+
 
     private lateinit var binding: ActivityMainBinding
     private var counter: Int = 0
@@ -38,29 +48,34 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = DataBindingUtil.setContentView(this, R.layout.activity_main)
 
+        //with coroutine, it continues
+        sayHelloFromMainThred()
+        sayHelloFromBackgroundThread()
+
         //without coroutine, it crashes
         binding.btnCount.setOnClickListener{
-            binding.tvTitle.text = counter++.toString()
+            countNumber()
         }
 
         binding.btnDownload.setOnClickListener {
             downloadBigFile()
         }
 
-        //with coroutine, it continues
-        sayHelloFromMainThred()
-        sayHelloFromBackgroundThread()
-
         //switch between coroutines
         binding.btnSwitchCoroutine.setOnClickListener {
-            binding.btnSwitchCoroutine.text =
+            CoroutineScope(Dispatchers.Main).launch {
+                downloadBigFileWithContext()
+            }
+        }
+
+        binding.btnSerialParallel.setOnClickListener{
+            val changePage =Intent(this, serialparralel::class.java)
+            startActivity(changePage)
         }
     }
 
-    private fun downloadBigFile() {
-        for (i in 0..1000000){
-            Log.i("TAGY", "Downloading in thread $1 in ${Thread.currentThread().name}")
-        }
+    private fun countNumber() {
+        binding.tvTitle.text = counter++.toString()
     }
 
     private fun sayHelloFromMainThred() {
@@ -74,5 +89,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun downloadBigFile() {
+        for (i in 0..1000000){
+            //Log.i("TAGY", "Downloading in thread $1 in ${Thread.currentThread().name}")
+            binding.tvBigDownload.text = "$i in ${Thread.currentThread().name}"
+        }
+    }
 
+    private suspend fun downloadBigFileWithContext() {
+        withContext(Dispatchers.Main){
+            for (i in 0..1000000){
+                binding.tvBigDownload.text = "$i in ${Thread.currentThread().name}"
+            }
+        }
+    }
 }
